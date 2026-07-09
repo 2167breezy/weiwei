@@ -61,7 +61,7 @@
     background: radial-gradient(circle, rgba(139,94,60,0.35) 0%, rgba(139,94,60,0.1) 40%, transparent 70%);
   }
 
-  a, button, .btn, .portfolio-card, .obs-cell, .value-card, .pdf-toggle, .contact-blur {
+  a, button, .btn, .portfolio-card, .obs-cell, .value-card, .contact-blur {
     cursor: none;
   }
 
@@ -295,12 +295,28 @@
     margin-bottom: 14px;
   }
 
+  .letter-closing {
+    font-family: var(--font-serif);
+    font-size: 18px !important;
+    font-weight: 700;
+    line-height: 1.6 !important;
+    color: var(--accent) !important;
+    margin-top: 24px !important;
+  }
+
+  .letter-emphasis {
+    font-weight: 700;
+  }
+
   .letter-sign {
     margin-top: 48px;
     font-family: var(--font-serif);
     font-size: 16px;
     color: var(--text-muted);
+    opacity: 0;
+    transition: opacity 1s ease;
   }
+  .letter-sign.revealed { opacity: 1; }
 
   /* ── YesGo Gallery Modal ── */
   .yesgo-modal {
@@ -653,13 +669,18 @@
     border-top: none;
   }
 
-  .work-item:nth-child(even) {
-    direction: rtl;
-  }
+  /* 用 order 显式控制左右，不依赖 DOM 顺序、不用 direction hack */
+  /* 默认：媒体（图片/画廊/播客卡）在左、文字在右 */
+  .work-item > .work-item-img,
+  .work-item > .portfolio-in-work,
+  .work-item > .podcast-mini { order: 1; }
+  .work-item > .work-item-body { order: 2; }
 
-  .work-item:nth-child(even) > * {
-    direction: ltr;
-  }
+  /* 偶数项（02、04）：媒体在右、文字在左 */
+  .work-item-reverse > .work-item-img,
+  .work-item-reverse > .portfolio-in-work,
+  .work-item-reverse > .podcast-mini { order: 2; }
+  .work-item-reverse > .work-item-body { order: 1; }
 
   .work-item-img {
     width: 100%;
@@ -667,6 +688,15 @@
     object-fit: cover;
     background: var(--border);
     display: block;
+    transition: transform 0.4s ease, filter 0.4s ease;
+  }
+
+  .work-item-img.clickable {
+    cursor: pointer;
+  }
+  .work-item-img.clickable:hover {
+    transform: scale(1.02);
+    filter: brightness(0.92);
   }
 
   .work-item-img.placeholder {
@@ -686,6 +716,11 @@
   .ai-experiments-img {
     object-fit: contain;
     background: #0a0a0a;
+  }
+
+  .cover-contain {
+    object-fit: contain !important;
+    background: #f5f3ef;
   }
     padding: 0 8px;
   }
@@ -740,41 +775,7 @@
 
   .work-item-link:hover { border-bottom-color: var(--accent); }
 
-  /* -- PDF preview -- */
-  .pdf-preview {
-    margin-top: 24px;
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    overflow: hidden;
-  }
-
-  .pdf-preview embed {
-    width: 100%;
-    height: 600px;
-    border: none;
-  }
-
-  .pdf-toggle {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    margin-top: 20px;
-    padding: 10px 24px;
-    font-size: 13px;
-    letter-spacing: 2px;
-    border: 1px solid var(--border);
-    background: transparent;
-    color: var(--text);
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
-
-  .pdf-toggle:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-  }
-
-  .work-item-stats {
+  /* ── 03 Header ── */  .work-item-stats {
     display: flex;
     gap: 20px;
     margin-top: 20px;
@@ -991,6 +992,13 @@
 
   .contact-value a:hover { color: var(--accent); }
 
+  .contact-blur {
+    filter: blur(5px);
+    transition: filter 0.4s ease;
+    cursor: pointer;
+    display: inline-block;
+  }
+  .contact-blur:hover,
   .contact-blur.revealed {
     filter: blur(0);
     cursor: default;
@@ -998,6 +1006,46 @@
 
   .contact-actions {
     margin-top: 56px;
+  }
+
+  /* ── Call Me Modal (简历卡片) ── */
+  .callme-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(0, 0, 0, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
+    padding: 40px;
+  }
+  .callme-modal.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .callme-img {
+    max-width: 780px;
+    max-height: 85vh;
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    box-shadow:
+      0 20px 60px rgba(0, 0, 0, 0.25),
+      0 8px 24px rgba(0, 0, 0, 0.15),
+      0 0 1px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .callme-modal.active .callme-img {
+    transform: scale(1);
+  }
+  .callme-img:hover {
+    box-shadow:
+      0 28px 72px rgba(0, 0, 0, 0.30),
+      0 12px 32px rgba(0, 0, 0, 0.18),
+      0 0 1px rgba(0, 0, 0, 0.1);
   }
 
   .social-links {
@@ -1084,19 +1132,118 @@
   /* ── Responsive ── */
   @media (max-width: 768px) {
     .nav { padding: 20px 24px; }
-    .nav-right { gap: 20px; }
+    .nav-right { gap: 16px; }
     .nav-right a { font-size: 12px; letter-spacing: 1px; }
+    .nav-title { display: none; }
+
     .section { padding: 80px 24px; }
+    .section.fullscreen { padding: 100px 24px; min-height: auto; }
+    .section-title { font-size: 32px; }
+
+    .opening .opening-title { font-size: 48px; }
+    .opening-subtitle { font-size: 13px; }
+    .opening-body p { font-size: 14px; }
+
+    .work-item-number { font-size: 11px; }
+    .work-item-title { font-size: 20px; }
+
+    .portfolio-in-work { grid-template-columns: 1fr 1fr; }
+
     .podcast-block { grid-template-columns: 1fr; gap: 36px; }
+    .podcast-card { padding: 24px; }
+    .letter-closing { font-size: 16px !important; }
+
     .obs-grid { grid-template-columns: 1fr 1fr; }
+
+    .timeline-track { padding-left: 32px; }
+    .timeline-item { margin-bottom: 32px; }
+    .timeline-year { font-size: 13px; }
+    .timeline-item-title { font-size: 15px; }
+    .timeline-desc { font-size: 13px; }
+
+    .contact-title { font-size: 22px; }
     .contact-row { flex-direction: column; gap: 4px; }
+    .contact-actions { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .btn { width: auto; font-size: 12px; padding: 10px 24px; }
+
+    .social-links { flex-wrap: wrap; gap: 16px; }
+
+    .greeting-headline { font-size: 32px; }
+    .greeting-tag { font-size: 13px; }
+    .greeting-body { padding: 32px 24px; }
+
+    .yesgo-modal-btn { width: 36px; height: 36px; font-size: 20px; }
+    .yesgo-modal-close { top: 16px; right: 20px; font-size: 22px; }
+
+    .footer-line { margin-top: 80px; }
   }
 
   @media (max-width: 480px) {
-    .obs-grid { grid-template-columns: 1fr; }
+    .nav { padding: 16px 16px; }
+    .nav-name { font-size: 14px; }
+    .nav-right a { font-size: 11px; letter-spacing: 0; }
+
+    .section { padding: 60px 16px; }
+    .section.fullscreen { padding: 80px 16px; }
+    .section-title { font-size: 26px; }
+    .section-number { font-size: 11px; margin-bottom: 20px; }
+
+    .opening .opening-title { font-size: 36px; }
+    .opening-subtitle { font-size: 12px; margin-bottom: 24px; }
+    .opening-body p { font-size: 13px; }
+    .opening-body { margin-bottom: 32px; }
+
+    .work-item-img { aspect-ratio: 3/2; }
+    .work-item { grid-template-columns: 1fr; }
+    /* 手机端统一：媒体在上、文字在下 */
+    .work-item > .work-item-img,
+    .work-item > .portfolio-in-work,
+    .work-item > .podcast-mini,
+    .work-item-reverse > .work-item-img,
+    .work-item-reverse > .portfolio-in-work,
+    .work-item-reverse > .podcast-mini { order: 1; }
+    .work-item > .work-item-body,
+    .work-item-reverse > .work-item-body { order: 2; }
+    .work-item-body { padding: 20px 0 0; }
+    .work-item-title { font-size: 18px; }
+    .work-item-desc { font-size: 13px; }
+    .work-item-link { font-size: 12px; }
+
     .portfolio-in-work { grid-template-columns: 1fr; }
-    .section-title { font-size: 30px; }
-    .opening .opening-title { font-size: 40px; }
+
+    .podcast-card { padding: 20px; }
+    .podcast-card h4 { font-size: 16px; }
+    .podcast-desc { font-size: 13px; }
+
+    .obs-grid { grid-template-columns: 1fr; }
+    .obs-name { font-size: 14px; }
+
+    .timeline-track { padding-left: 24px; }
+    .timeline-item::before { width: 8px; height: 8px; left: -28px; }
+    .timeline-year { font-size: 12px; }
+    .timeline-item-title { font-size: 14px; }
+    .timeline-desc { font-size: 12px; }
+
+    .contact-title { font-size: 18px; }
+    .contact-label { font-size: 11px; width: 56px; }
+    .contact-value { font-size: 13px; }
+    .btn { width: 100%; text-align: center; }
+    .social-links { gap: 12px; justify-content: flex-start; }
+    .social-link { font-size: 11px; }
+
+    .greeting-headline { font-size: 26px; }
+    .greeting-tag { font-size: 12px; }
+    .greeting-sign { font-size: 13px; }
+    .greeting-close { font-size: 10px; margin-top: 32px; }
+
+    .yesgo-modal-btn { width: 30px; height: 30px; font-size: 18px; }
+    .yesgo-modal-dots { bottom: 16px; }
+    .yesgo-modal-count { bottom: 16px; font-size: 10px; }
+    .yesgo-modal-close { top: 12px; right: 12px; font-size: 20px; }
+
+    .footer-line { margin-top: 60px; font-size: 11px; }
+    .letter-closing { font-size: 15px !important; }
+    .lang-hint { margin-top: 40px; }
   }
 </style>
 </head>
@@ -1169,11 +1316,11 @@
       <span class="show-zh-only">Editor's Letter</span>
       <span class="show-en-only">编辑手记</span>
     </h2>
+    <p class="letter-hint" style="font-size:13px; color:var(--text-muted); letter-spacing:2px; margin-bottom:16px;">
+      <span class="show-zh-only">点击展开信件</span>
+      <span class="show-en-only">Click to unfold</span>
+    </p>
     <div class="letter-body">
-      <p class="letter-hint" style="font-size:13px; color:var(--text-muted); letter-spacing:2px; margin-bottom:16px;">
-        <span class="show-zh-only">点击展开信件</span>
-        <span class="show-en-only">Click to unfold</span>
-      </p>
       <p class="show-zh-only">很多人因为一项技能定义自己，而我，总是因为一个个问题。</p>
       <p class="show-zh-only">什么样的空间，会让人愿意停下来？</p>
       <p class="show-zh-only">什么样的内容，会让陌生人开始聊天？</p>
@@ -1181,10 +1328,8 @@
       <p class="show-zh-only">什么样的机制，会让一次相遇变成长久的关系？</p>
       <p class="show-zh-only">这些问题，让我学习空间设计、研究社区，也开始探索 AI。</p>
       <p class="show-zh-only">因为我始终相信：环境塑造关系，社区孕育连接，技术应该放大人的创造力，而不是取代人与人。</p>
-      <p class="show-zh-only">我真正感兴趣的，从来不是某个行业，而是人与空间、人与人、人与自己，以及人与未来之间，会留下些什么。</p>
-      <p class="show-zh-only">我想一个地方的未来，不在于它如何被定义，而在于是否有人愿意留下时间、留下注意力，也留下彼此。</p>
-      <p class="show-zh-only">我希望未来的工作，不只是完成一个又一个项目，而是创造那些值得停留、愿意分享，也让人反复回来的产品、社区与体验。</p>
-      <p class="show-zh-only" style="color:var(--accent);">让一个地方，值得停留；也因为人与人的连接，值得一次次回来。</p>
+      <p class="show-zh-only letter-emphasis">我真正感兴趣的是「人与空间」「人与人的连接」、「人与自己」在未来，会留下什么。</p>
+      <p class="show-zh-only letter-closing">让一个地方，值得停留；也因为人与人的连接，值得一次次回来。</p>
 
       <p class="show-en-only">Most people define themselves by a skill. I define myself by questions.</p>
       <p class="show-en-only">What kind of space makes people want to pause?</p>
@@ -1193,16 +1338,10 @@
       <p class="show-en-only">What kind of mechanism turns an encounter into a lasting relationship?</p>
       <p class="show-en-only">These questions led me to study spatial design, communities, and now AI.</p>
       <p class="show-en-only">Because I've always believed: environments shape relationships, community breeds connection, and technology should amplify human creativity — not replace it.</p>
-      <p class="show-en-only">What I'm truly interested in is not any single industry, but what remains — between people and space, between people and people, between people and themselves, and between people and the future.</p>
-      <p class="show-en-only">I believe a place's future isn't defined by how it's labeled, but by whether people choose to leave their time, their attention, and each other there.</p>
-      <p class="show-en-only">What I want for my future work is not to keep completing projects, but to create products, communities, and experiences worth pausing for, worth sharing, and worth returning to.</p>
-      <p class="show-en-only" style="color:var(--accent);">A place worth staying. And because of the connections between people — worth coming back to, again and again.</p>
+      <p class="show-en-only letter-emphasis">What I'm truly interested in is what remains — between people and space, between people and people, between people and themselves — in the future.</p>
+      <p class="show-en-only letter-closing">A place worth staying. And because of the connections between people — worth coming back to, again and again.</p>
 
       <p class="letter-sign">—— 魏婧亭 / Wei Jingting</p>
-      <p class="letter-hint" style="font-size:13px; color:var(--text-muted); margin-top:4px; letter-spacing:2px;">
-        <span class="show-zh-only">点击展开</span>
-        <span class="show-en-only">Click to unfold</span>
-      </p>
     </div>
   </div>
 </section>
@@ -1229,18 +1368,15 @@
           <span class="show-zh-only">为 LOFT53 商业品牌运营增长提出的极简风格品牌策划案。本质想要解决线上内容 / 线下空间 / 品牌之间，如何融合，成为更多深圳年轻人的长期叙事。</span>
           <span class="show-en-only">A minimalist brand strategy proposal for LOFT53's commercial brand growth. Exploring how to integrate online content, offline space, and brand identity into a long-term narrative for young people in Shenzhen.</span>
         </p>
-        <button class="pdf-toggle" onclick="document.getElementById('pdf-preview-01').style.display = document.getElementById('pdf-preview-01').style.display === 'none' ? 'block' : 'none'; this.textContent = this.textContent.includes('展开') ? this.textContent.replace('展开', '收起') : this.textContent.replace('收起', '展开');">
-          <span class="show-zh-only">📄 展开预览完整提案</span>
-          <span class="show-en-only">📄 View Full Proposal</span>
-        </button>
+        <a href="loft53-proposal.pdf" target="_blank" class="btn" style="display:inline-block; margin-top:8px; text-decoration:none;">
+          <span class="show-zh-only">📄 查看完整提案 (14MB)</span>
+          <span class="show-en-only">📄 View Full Proposal (14MB)</span>
+        </a>
       </div>
-    </div>
-    <div class="pdf-preview" id="pdf-preview-01" style="display:none;">
-      <embed src="loft53-proposal.pdf" type="application/pdf">
     </div>
 
     <!-- 02 Commercial Space -->
-    <div class="work-item">
+    <div class="work-item work-item-reverse">
       <div class="work-item-body">
         <div class="work-item-number">02 Commercial Space</div>
         <h3 class="work-item-title">
@@ -1281,7 +1417,7 @@
     </div>
 
     <!-- 04 Podcast -->
-    <div class="work-item">
+    <div class="work-item work-item-reverse">
       <div class="work-item-body">
         <div class="work-item-number">04 Podcast</div>
         <h3 class="work-item-title">
@@ -1322,7 +1458,7 @@
     </div>
 
     <!-- 05 AI Experiments -->
-    <div class="work-item">
+    <div class="work-item work-item-reverse">
       <div class="work-item-body">
         <div class="work-item-number">05 AI Experiments</div>
         <h3 class="work-item-title">
@@ -1511,11 +1647,11 @@
     <div class="contact-info">
       <div class="contact-row">
         <div class="contact-label">Email</div>
-        <div class="contact-value"><span class="contact-blur" onclick="revealContact(this)"><a href="mailto:1152297555@qq.com">1152297555@qq.com</a></span></div>
+        <div class="contact-value"><span class="contact-blur" onmouseenter="revealContact(this)" onclick="revealContact(this)"><a href="mailto:1152297555@qq.com">1152297555@qq.com</a></span></div>
       </div>
       <div class="contact-row">
         <div class="contact-label">WeChat</div>
-        <div class="contact-value"><span class="contact-blur" onclick="revealContact(this)">18870812167</span></div>
+        <div class="contact-value"><span class="contact-blur" onmouseenter="revealContact(this)" onclick="revealContact(this)">18870812167</span></div>
       </div>
       <div class="contact-row">
         <div class="contact-label">
@@ -1553,7 +1689,7 @@
     </div>
 
     <div class="contact-actions">
-      <a href="weijingting-resume.pdf" class="btn btn-solid" download>
+      <a href="javascript:void(0)" class="btn btn-solid" onclick="openResume()">
         <span class="show-zh-only">阅读简历</span>
         <span class="show-en-only">View Resume</span>
       </a>
@@ -1572,6 +1708,10 @@
       </div>
     </div>
 
+    <div class="callme-modal" id="callmeModal" onclick="closeResume()">
+      <img src="callme-card.png" alt="Call Me" class="callme-img">
+    </div>
+
     <p class="footer-line">魏婧亭 / 体验设计师 / 2026</p>
   </div>
 </section>
@@ -1585,7 +1725,7 @@
       cursor.style.top = e.clientY + 'px';
     });
 
-    const interactives = document.querySelectorAll('a, button, .btn, .portfolio-card, .obs-cell, .value-card, .pdf-toggle, .contact-blur, .work-item-img, .podcast-mini-item');
+    const interactives = document.querySelectorAll('a, button, .btn, .portfolio-card, .obs-cell, .value-card, .contact-blur, .work-item-img, .podcast-mini-item');
     interactives.forEach(el => {
       el.addEventListener('mouseenter', () => cursor.classList.add('hover'));
       el.addEventListener('mouseleave', () => cursor.classList.remove('hover'));
@@ -1629,9 +1769,14 @@
       const hint = document.querySelector('.letter-hint');
       if (hint) hint.classList.add('hidden');
       const letterParas = document.querySelectorAll('#letter .letter-body p:not(.letter-sign)');
+      const totalParas = letterParas.length;
       letterParas.forEach((p, i) => {
         setTimeout(() => p.classList.add('revealed'), i * 140);
       });
+      const sign = document.querySelector('#letter .letter-sign');
+      if (sign) {
+        setTimeout(() => sign.classList.add('revealed'), totalParas * 140 + 150);
+      }
     });
   }
 
@@ -1767,6 +1912,20 @@
 
   function closeWeChatQR() {
     const modal = document.getElementById('wechatQrModal');
+    if (!modal) return;
+    modal.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  function openResume() {
+    const modal = document.getElementById('callmeModal');
+    if (!modal) return;
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeResume() {
+    const modal = document.getElementById('callmeModal');
     if (!modal) return;
     modal.classList.remove('active');
     document.body.style.overflow = '';
